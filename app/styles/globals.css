@@ -1,0 +1,121 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap");
+
+@import "tailwindcss/preflight";
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+
+@layer base {
+  :root {
+    --color-primary: #2c7a7b;
+    --color-primary-dark: #234e52;
+    --color-primary-light: #3d9a9d;
+    --color-secondary: #63b3ed;
+    --color-secondary-light: #90cdf4;
+    --color-alert: #f687b3;
+    --color-alert-light: #fbb6ce;
+    --color-success: #48bb78;
+    --color-background: #f7fafc;
+    --color-surface: #ffffff;
+    --color-text-primary: #2d3748;
+    --color-text-secondary: #718096;
+    --color-gray-light: #e2e8f0;
+    --color-gray-fog: rgba(160, 174, 192, 0.2);
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "Roboto", sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  p {
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer utilities {
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
+
+  .animate-green-wave {
+    animation: greenWave 0.6s ease-out;
+  }
+
+  @keyframes greenWave {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .animate-progress-ring {
+    animation: progressRing 1s ease-out forwards;
+  }
+
+  @keyframes progressRing {
+    from {
+      stroke-dashoffset: 283;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
