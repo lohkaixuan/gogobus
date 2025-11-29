@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Route } from '../types';
 
 interface HealthMapProps {
@@ -8,8 +9,20 @@ interface HealthMapProps {
 }
 
 export const HealthMap: React.FC<HealthMapProps> = ({ selectedRoute }) => {
+  const router = useRouter();
+
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-[#E6F7F7] to-[#B8E6E6] rounded-3xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => router.push('/')}
+        className="absolute z-20 top-4 left-4 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-sm font-medium text-teal-700 shadow-md backdrop-blur hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+        aria-label="Back to home"
+      >
+        <span aria-hidden>←</span>
+        <span className="hidden sm:inline">Back to Home</span>
+      </button>
+
       {/* Health Heatmap Overlay */}
       <div className="absolute inset-0">
         {/* Clean air zones - green glows */}

@@ -12,6 +12,8 @@ export interface Route {
   caloriesBurned?: number;
   exposureLevel: number[];
   scenicWaypoints: Waypoint[];
+  destinationCoords?: { lat: number; lng: number };
+  pathCoordinates?: { lat: number; lng: number }[];
 }
 
 export interface WalkingSegment {
