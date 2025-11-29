@@ -18,28 +18,31 @@ interface RealMapProps {
     selectedRoute?: RouteWithGeo;
     destinationCoords?: LatLngPoint | null;
     destinationLabel?: string;
+    /** 用来从外部强制居中（按一次按钮就 +1） */
+    recenterToken?: number;
 }
 
 export function RealMap({
     selectedRoute,
     destinationCoords,
     destinationLabel,
+    recenterToken,
 }: RealMapProps) {
-    // ------- 状态 ------- //
     const [userLocation, setUserLocation] = React.useState<LatLngPoint | null>(
         null
     );
     const [routeLine, setRouteLine] = React.useState<LatLngPoint[]>([]);
 
-    // Leaflet map & layer group refs
     const containerRef = React.useRef<HTMLDivElement | null>(null);
     const mapRef = React.useRef<L.Map | null>(null);
     const layerGroupRef = React.useRef<L.LayerGroup | null>(null);
 
+    const firstDrawRef = React.useRef(true);
+    const lastRecenterTokenRef = React.useRef<number | undefined>(undefined);
+
     const destinationPoint =
         selectedRoute?.destinationCoords || destinationCoords || null;
 
-    // ------- 图标 ------- //
     const userIcon = React.useMemo(
         () =>
             L.icon({
@@ -62,7 +65,7 @@ export function RealMap({
         });
     }, [selectedRoute?.type]);
 
-    // ------- 用户位置 ------- //
+    // 用户位置
     React.useEffect(() => {
         if (typeof window === "undefined" || !navigator.geolocation) return;
 
@@ -79,7 +82,7 @@ export function RealMap({
         );
     }, []);
 
-    // ------- 计算路线（优先步行 OSRM，健康对齐 SDG3） ------- //
+    // 计算路线：优先用 route.pathCoordinates，否则用 OSRM foot route
     React.useEffect(() => {
         if (selectedRoute?.pathCoordinates?.length) {
             setRouteLine(selectedRoute.pathCoordinates);
@@ -100,12 +103,11 @@ export function RealMap({
             .then((res) => res.json())
             .then((data) => {
                 if (!data.routes?.[0]?.geometry?.coordinates) return;
-                const coords: LatLngPoint[] = data.routes[0].geometry.coordinates.map(
-                    (c: number[]) => ({
+                const coords: LatLngPoint[] =
+                    data.routes[0].geometry.coordinates.map((c: number[]) => ({
                         lng: c[0],
                         lat: c[1],
-                    })
-                );
+                    }));
                 setRouteLine(coords);
             })
             .catch((e) => {
@@ -115,7 +117,7 @@ export function RealMap({
         return () => controller.abort();
     }, [destinationPoint, selectedRoute, userLocation]);
 
-    // ------- WALK / BUS / MRT 标签 ------- //
+    // WALK / BUS / MRT 标签
     const transitIcons = React.useMemo(() => {
         const build = (label: string, bg: string) =>
             L.divIcon({
@@ -167,7 +169,6 @@ export function RealMap({
         transitIcons,
     ]);
 
-    // ------- 地图中心 ------- //
     const center: LatLngPoint = React.useMemo(() => {
         if (userLocation) return userLocation;
         if (destinationPoint) return destinationPoint;
@@ -176,11 +177,11 @@ export function RealMap({
 
     const centerArray: [number, number] = [center.lat, center.lng];
 
-    // ------- 只初始化一次 Leaflet Map（不会再 “already initialized”） ------- //
+    // 初始化 map（只一次）
     React.useEffect(() => {
         if (typeof window === "undefined") return;
         if (!containerRef.current) return;
-        if (mapRef.current) return; // 已经有 map 了就不再初始化
+        if (mapRef.current) return;
 
         const map = L.map(containerRef.current, {
             center: centerArray,
@@ -202,20 +203,22 @@ export function RealMap({
             mapRef.current = null;
             layerGroupRef.current = null;
         };
-        // 只在第一次挂载时跑
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ------- 每次数据变化时更新 marker + polyline ------- //
+    // 当 route / 目的地改变时，允许重新自动居中一次
+    React.useEffect(() => {
+        firstDrawRef.current = true;
+    }, [selectedRoute?.id, destinationCoords?.lat, destinationCoords?.lng]);
+
+    // 每次数据变化时更新图层 + 控制视图
     React.useEffect(() => {
         const map = mapRef.current;
         const group = layerGroupRef.current;
         if (!map || !group) return;
 
-        // 先清掉旧图层
         group.clearLayers();
 
-        // 1. 画路线，并记录 bounds
         let polylineBounds: L.LatLngBounds | null = null;
 
         if (routeLine.length > 1) {
@@ -224,33 +227,42 @@ export function RealMap({
             polylineBounds = polyline.getBounds();
         }
 
-        // 2. 画用户位置
         if (userLocation) {
             L.marker([userLocation.lat, userLocation.lng], {
                 icon: userIcon,
             }).addTo(group);
         }
 
-        // 3. 画终点
         if (destinationPoint) {
             L.marker([destinationPoint.lat, destinationPoint.lng], {
                 icon: destinationIcon,
             }).addTo(group);
         }
 
-        // 4. 画 WALK / BUS / MRT 标签
         transitStops.forEach((stop) => {
             L.marker([stop.point.lat, stop.point.lng], {
                 icon: stop.icon,
             }).addTo(group);
         });
 
-        // 5. 视图更新逻辑：
-        //    有 routeLine 就以整条路为主，没有就回退用 center
-        if (polylineBounds) {
-            map.fitBounds(polylineBounds, { padding: [32, 32] });
-        } else {
-            map.setView(centerArray, 14);
+        const lastToken = lastRecenterTokenRef.current;
+        const forceRecenter =
+            typeof recenterToken === "number" && recenterToken !== lastToken;
+        const shouldRecenter = firstDrawRef.current || forceRecenter;
+
+        if (shouldRecenter) {
+            if (polylineBounds) {
+                map.fitBounds(polylineBounds, { padding: [32, 32] });
+            } else {
+                map.setView(centerArray, forceRecenter ? 16 : 14);
+            }
+        }
+
+        if (firstDrawRef.current) {
+            firstDrawRef.current = false;
+        }
+        if (forceRecenter) {
+            lastRecenterTokenRef.current = recenterToken;
         }
     }, [
         centerArray,
@@ -260,9 +272,9 @@ export function RealMap({
         transitStops,
         userIcon,
         destinationIcon,
+        recenterToken,
     ]);
 
-    // ------- UI ------- //
     return (
         <div className="relative w-full h-full rounded-3xl overflow-hidden">
             {!destinationPoint ? (
@@ -284,12 +296,7 @@ export function RealMap({
                 </div>
             ) : null}
 
-            {/* 真正的 Leaflet 容器 */}
-            <div
-                ref={containerRef}
-                className="w-full h-full"
-            // 这一块就是之前 MapContainer 占的位置
-            />
+            <div ref={containerRef} className="w-full h-full" />
         </div>
     );
 }

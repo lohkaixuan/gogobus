@@ -56,7 +56,7 @@ export const RerouteModal: React.FC<RerouteModalProps> = ({
         <div className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] text-white px-6 py-6">
           <div className="text-sm opacity-90 mb-1">Transit Update</div>
           <h3>Bus 404 is stuck in traffic.</h3>
-          <p className="text-sm opacity-90 mt-2">Let's adjust for lower stress.</p>
+          <p className="text-sm opacity-90 mt-2">Let&apos;s adjust for lower stress.</p>
         </div>
 
         {/* Options */}

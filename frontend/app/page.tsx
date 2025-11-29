@@ -301,22 +301,25 @@ export default function App() {
   }
 
   // Navigation View
-  if (view === "navigation" && selectedRoute) {
-    return (
-      <>
-        <NavigationView
-          route={selectedRoute}
-          onComplete={handleNavigationComplete}
-        />
-        <RerouteModal
-          isOpen={showRerouteModal}
-          onClose={() => setShowRerouteModal(false)}
-          options={mockRerouteOptions}
-          onSelectOption={handleRerouteSelect}
-        />
-      </>
-    );
-  }
+// 片段示例
+if (view === "navigation" && selectedRoute) {
+  return (
+    <>
+      <NavigationView
+        route={selectedRoute}
+        onComplete={handleNavigationComplete}
+        onExit={() => setView("home")}  // 🔙 回到首页
+      />
+      <RerouteModal
+        isOpen={showRerouteModal}
+        onClose={() => setShowRerouteModal(false)}
+        options={mockRerouteOptions}
+        onSelectOption={handleRerouteSelect}
+      />
+    </>
+  );
+}
+
 
   return null;
 }
