@@ -18,7 +18,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({ routes, onClose 
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+  <div className="fixed inset-0 z-[9999] bg-white overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 bg-white border-b border-[var(--color-gray-light)] px-6 py-4 flex items-center justify-between z-10">
         <h3>Compare Routes</h3>
