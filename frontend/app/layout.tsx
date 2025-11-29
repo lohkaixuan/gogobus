@@ -1,3 +1,5 @@
+import React from "react";
+import "./globals.css"; // MUST be here for global styles
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
