@@ -76,8 +76,10 @@ export function RealMap({
                     lng: pos.coords.longitude,
                 });
             },
+            // We ignore location errors for the demo and rely on our Bukit Bintang fallback
             (err) => {
-                console.error("Geolocation error", err);
+                console.log("Using demo starting location due to Geolocation denial or error.");
+                // We keep userLocation as null to correctly trigger the fallback center logic
             }
         );
     }, []);
@@ -171,8 +173,15 @@ export function RealMap({
 
     const center: LatLngPoint = React.useMemo(() => {
         if (userLocation) return userLocation;
-        if (destinationPoint) return destinationPoint;
-        return { lat: 3.139, lng: 101.686 }; // KL fallback
+        // 🌟 MODIFICATION: Set Bukit Bintang as fallback if user location is missing
+        const bukitBintangFallback = { lat: 3.1466, lng: 101.706 }; 
+        if (destinationPoint) {
+            // If we have a destination, center the map between the start (Bukit Bintang) and the destination
+            const centerLat = (bukitBintangFallback.lat + destinationPoint.lat) / 2;
+            const centerLng = (bukitBintangFallback.lng + destinationPoint.lng) / 2;
+            return { lat: centerLat, lng: centerLng };
+        }
+        return bukitBintangFallback;
     }, [destinationPoint, userLocation]);
 
     const centerArray: [number, number] = [center.lat, center.lng];

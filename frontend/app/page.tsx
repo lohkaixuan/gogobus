@@ -1,3 +1,4 @@
+// frontend/app/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -21,9 +22,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
-// ❌ 删掉这一行：import { RealMap } from "./components/RealMap";
-
-// ✅ 改成动态加载
+// ✅ Dynamic Map Load
 const RealMapClient = dynamic(
   () => import("./components/RealMap").then((m) => m.RealMap),
   {
@@ -39,32 +38,42 @@ const RealMapClient = dynamic(
 type AppView = "home" | "route-selection" | "navigation" | "comparison";
 
 export default function App() {
-  const [view, setView] = useState<AppView>("home");
+  // 🌟 MODIFICATION START: Set demo route to be ready, but keep view at "home" 🌟
+  const initialDestinationName = "KLCC Area";
+  const initialDestinationCoords = { lat: 3.1579, lng: 101.7123 }; // KLCC Coords (from mockData.ts)
+  
+  const [view, setView] = useState<AppView>("home"); // Start at home
   const [selectedRoute, setSelectedRoute] = useState<RouteType | null>(null);
-  const [destination, setDestination] = useState("");
+  const [destination, setDestination] = useState(initialDestinationName); // Pre-fill destination
   const [destinationCoords, setDestinationCoords] = useState<{
     lat: number;
     lng: number;
-  } | null>(null);
+  } | null>(initialDestinationCoords); // Pre-fill coordinates
+  // 🌟 MODIFICATION END 🌟
+
   const [showRerouteModal, setShowRerouteModal] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
   const [healthMetrics, setHealthMetrics] = useState(mockHealthMetrics);
 
   const resolveDestinationCoords = (name: string) => {
     const key = name.toLowerCase().trim();
-    if (key.includes("downtown")) return { lat: 3.1466, lng: 101.7116 };
+    if (key.includes("downtown") || key.includes("klcc")) return { lat: 3.1579, lng: 101.7123 };
     if (key.includes("green park")) return { lat: 3.155, lng: 101.713 };
     if (key.includes("riverside")) return { lat: 3.1505, lng: 101.695 };
-    // Default: Bukit Bintang area
-    return { lat: 3.1466, lng: 101.7116 };
+    // Default: KLCC area
+    return { lat: 3.1579, lng: 101.7123 };
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (destination.trim()) {
       setDestinationCoords(resolveDestinationCoords(destination));
+      
+      // Select the first health route for a ready demo map view
+      const demoRoute = mockRoutes.find((r) => r.id === "1") || mockRoutes[0];
+      setSelectedRoute(demoRoute);
+      
       setView("route-selection");
-      setSelectedRoute(null);
     }
   };
 
@@ -102,8 +111,8 @@ export default function App() {
     }
     setView("home");
     setSelectedRoute(null);
-    setDestination("");
-    setDestinationCoords(null);
+    setDestination(initialDestinationName); // Reset to demo destination
+    setDestinationCoords(initialDestinationCoords);
   };
 
   const handleRerouteSelect = (optionId: string) => {
@@ -114,8 +123,7 @@ export default function App() {
   // Home View
   if (view === "home") {
     return (
-      <div className="min-h-screen bg-linear-to-br from-(--color-background) to-[#E6F7F7]">
-        {/* Header */}
+<div className="min-h-screen bg-[#F6FCFC]">        {/* Header */}
         <header className="px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] rounded-2xl flex items-center justify-center text-white text-xl">
@@ -301,7 +309,6 @@ export default function App() {
   }
 
   // Navigation View
-// 片段示例
 if (view === "navigation" && selectedRoute) {
   return (
     <>
@@ -319,7 +326,6 @@ if (view === "navigation" && selectedRoute) {
     </>
   );
 }
-
 
   return null;
 }
